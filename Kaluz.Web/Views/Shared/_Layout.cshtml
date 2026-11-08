@@ -1,0 +1,90 @@
+
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@ViewData["Title"] | Kaluz</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <a href="/" class="brand">
+                ✦ Kaluz
+                <small>Gestión de tienda</small>
+            </a>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="user">
+                    @User.Identity.Name
+                    <br />
+                    <small>
+                        @(User.IsInRole("Administrador") ? "Administradora" : "Vendedora")
+                    </small>
+                </div>
+
+                <nav>
+                    <a href="/">⌂ Dashboard</a>
+                    <a href="/Ventas">▣ Ventas y tickets</a>
+                    <a href="/Ventas/Crear">＋ Nueva venta</a>
+                    <a href="/Inventario">◫ Inventario</a>
+                    <a href="/Maestros?tipo=Clientes">♧ Clientes</a>
+                    <a href="/Caja">▥ Caja</a>
+                    <a href="/Devoluciones">↶ Devoluciones</a>
+
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <div class="navtitle">ADMINISTRACIÓN</div>
+
+                        <a href="/Maestros?tipo=Productos">▤ Productos</a>
+                        <a href="/Maestros?tipo=Variantes">◩ Tallas y colores</a>
+                        <a href="/Maestros?tipo=Categorias">Categorías</a>
+                        <a href="/Maestros?tipo=Proveedores">Proveedores</a>
+                        <a href="/Compras">Compras</a>
+                        <a href="/Maestros?tipo=Gastos">Gastos</a>
+                        <a href="/Maestros?tipo=CategoriasGasto">Categorías de gastos</a>
+                        <a href="/Maestros?tipo=Usuarios">Usuarios y roles</a>
+                        <a href="/Reportes">Reportes</a>
+                    }
+                </nav>
+
+                <div class="bottom">
+                    <a href="/Account/Password">Cambiar contraseña</a>
+
+                    <form asp-controller="Account"
+                          asp-action="Logout"
+                          method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="linkbtn" type="submit">
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            }
+        </aside>
+
+        <main class="main">
+            <header class="top">
+                <span>Panel de gestión · Tienda de ropa femenina</span>
+                <strong>@DateTime.Now.ToString("dd/MM/yyyy")</strong>
+            </header>
+
+            <section class="content">
+                @if (TempData["ok"] != null)
+                {
+                    <div class="alert ok">@TempData["ok"]</div>
+                }
+
+                @if (TempData["err"] != null)
+                {
+                    <div class="alert bad">@TempData["err"]</div>
+                }
+
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+</body>
+</html>

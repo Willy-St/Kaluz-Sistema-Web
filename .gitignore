@@ -1,0 +1,12 @@
+# Visual Studio and .NET build outputs
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+# Local secrets and database backups
+**/appsettings.Development.json
+**/appsettings.Local.json
+*.bak
+*.mdf
+*.ldf

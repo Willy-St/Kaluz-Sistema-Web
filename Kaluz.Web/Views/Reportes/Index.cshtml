@@ -1,0 +1,260 @@
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Reportes e indicadores";
+
+    var resumen = (Dictionary<string, object?>)ViewBag.Resumen;
+    var utilidad = (Dictionary<string, object?>)ViewBag.Utilidad;
+
+    decimal Valor(object? value) =>
+        value == null || value == DBNull.Value
+            ? 0m
+            : Convert.ToDecimal(value);
+
+    string Dinero(object? value) =>
+        "S/ " + Valor(value).ToString("N2", CultureInfo.GetCultureInfo("es-PE"));
+
+    var ventas = (List<Dictionary<string, object?>>)ViewBag.Ventas;
+    var top = (List<Dictionary<string, object?>>)ViewBag.Top;
+    var gastos = (List<Dictionary<string, object?>>)ViewBag.Gastos;
+    var pagos = (List<Dictionary<string, object?>>)ViewBag.Pagos;
+    var compras = (List<Dictionary<string, object?>>)ViewBag.Compras;
+}
+
+<div class="pagehead">
+    <div>
+        <h1>Reportes e indicadores</h1>
+        <p>Resumen financiero y comercial de los últimos 30 días.</p>
+    </div>
+
+    <div class="actions">
+        <a class="btn secondary" href="/Reportes/Csv?tipo=ventas">Ventas CSV</a>
+        <a class="btn secondary" href="/Reportes/Csv?tipo=stock">Stock CSV</a>
+        <a class="btn secondary" href="/Reportes/Csv?tipo=gastos">Gastos CSV</a>
+        <a class="btn secondary" href="/Reportes/Csv?tipo=compras">Compras CSV</a>
+        <a class="btn secondary" href="/Reportes/Csv?tipo=pagos">Pagos CSV</a>
+        <button class="btn" onclick="window.print()">Guardar PDF / Imprimir</button>
+    </div>
+</div>
+
+<h2>Resumen financiero</h2>
+
+<div class="metrics">
+    <div class="metric">
+        <small>Ventas brutas</small>
+        <strong>@Dinero(resumen["VentasBrutas"])</strong>
+    </div>
+
+    <div class="metric">
+        <small>Devoluciones</small>
+        <strong>@Dinero(resumen["Devoluciones"])</strong>
+    </div>
+
+    <div class="metric">
+        <small>Ventas netas</small>
+        <strong>@Dinero(resumen["VentasNetas"])</strong>
+    </div>
+
+    <div class="metric">
+        <small>Gastos operativos</small>
+        <strong>@Dinero(resumen["Gastos"])</strong>
+    </div>
+
+    <div class="metric">
+        <small>Costo de mercadería vendida</small>
+        <strong>@Dinero(resumen["CostoMercaderia"])</strong>
+    </div>
+
+    <div class="metric">
+        <small>Compras recibidas</small>
+        <strong>@Dinero(resumen["ComprasRecibidas"])</strong>
+    </div>
+
+    <div class="metric">
+        <small>Utilidad operativa estimada</small>
+        <strong>@Dinero(utilidad["UtilidadEstimada"])</strong>
+    </div>
+</div>
+
+<p class="muted">
+    La utilidad es una estimación basada en el costo actual de los productos.
+    Las compras recibidas se muestran como información de abastecimiento
+    y no se descuentan nuevamente de la utilidad.
+</p>
+
+<div class="columns">
+
+    <div class="panel tablewrap">
+        <h2>Ventas diarias · últimos 30 días</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Ventas</th>
+                    <th>Ventas brutas</th>
+                    <th>Devoluciones</th>
+                    <th>Ventas netas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ventas.Count == 0)
+                {
+                    <tr><td colspan="5">No hay ventas ni devoluciones registradas en este periodo.</td></tr>
+                }
+                else
+                {
+                    @foreach (var r in ventas)
+                    {
+                        <tr>
+                            <td>@r["Dia"]</td>
+                            <td>@r["Cantidad"]</td>
+                            <td>@Dinero(r["Total"])</td>
+                            <td>@Dinero(r["Devoluciones"])</td>
+                            <td>@Dinero(r["Neto"])</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel tablewrap">
+        <h2>Productos más vendidos</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Unidades netas</th>
+                    <th>Importe neto estimado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (top.Count == 0)
+                {
+                    <tr><td colspan="3">No hay productos vendidos.</td></tr>
+                }
+                else
+                {
+                    @foreach (var r in top)
+                    {
+                        <tr>
+                            <td>@r["Nombre"]</td>
+                            <td>@r["Unidades"]</td>
+                            <td>@Dinero(r["Importe"])</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="columns">
+
+    <div class="panel tablewrap">
+        <h2>Gastos por categoría</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Registros</th>
+                    <th>Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (gastos.Count == 0)
+                {
+                    <tr><td colspan="3">No hay gastos registrados.</td></tr>
+                }
+                else
+                {
+                    @foreach (var r in gastos)
+                    {
+                        <tr>
+                            <td>@r["Categoria"]</td>
+                            <td>@r["Cantidad"]</td>
+                            <td>@Dinero(r["Total"])</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel tablewrap">
+        <h2>Ventas por método de pago</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Método</th>
+                    <th>Operaciones</th>
+                    <th>Bruto</th>
+                    <th>Reembolsos</th>
+                    <th>Neto</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (pagos.Count == 0)
+                {
+                    <tr><td colspan="5">No hay pagos registrados.</td></tr>
+                }
+                else
+                {
+                    @foreach (var r in pagos)
+                    {
+                        <tr>
+                            <td>@r["Metodo"]</td>
+                            <td>@r["Cantidad"]</td>
+                            <td>@Dinero(r["Bruto"])</td>
+                            <td>@Dinero(r["Devoluciones"])</td>
+                            <td>@Dinero(r["Total"])</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="panel tablewrap">
+    <h2>Compras a proveedores · últimos 30 días</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Compra</th>
+                <th>Proveedor</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Total solicitado</th>
+                <th>Valor recibido</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (compras.Count == 0)
+            {
+                <tr><td colspan="6">No hay compras registradas.</td></tr>
+            }
+            else
+            {
+                @foreach (var r in compras)
+                {
+                    <tr>
+                        <td>#@r["IdCompra"]</td>
+                        <td>@r["Proveedor"]</td>
+                        <td>@r["Fecha"]</td>
+                        <td>@r["Estado"]</td>
+                        <td>@Dinero(r["Total"])</td>
+                        <td>@Dinero(r["TotalRecibido"])</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

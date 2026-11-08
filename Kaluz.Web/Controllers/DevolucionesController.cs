@@ -1,0 +1,8 @@
+using System.Security.Claims;using Kaluz.Web.Models;using Kaluz.Web.Services;using Microsoft.AspNetCore.Mvc;using Microsoft.AspNetCore.Authorization;
+namespace Kaluz.Web.Controllers;
+[Authorize(Roles="Administrador,Vendedora")]public class DevolucionesController(Db db,KaluzService svc):Controller{
+ public IActionResult Index(){ViewBag.Rows=db.List("SELECT TOP 100 d.*,v.NumeroTicket FROM Devolucion d JOIN Venta v ON v.IdVenta=d.IdVenta ORDER BY IdDevolucion DESC");return View();}
+ [HttpGet]public IActionResult Crear(int ventaId=0){ViewBag.VentaId=ventaId;ViewBag.Detalles=db.List("SELECT dv.IdDetalleVenta,dv.IdVenta,p.Nombre+' '+v.Talla+' '+v.Color AS Nombre,dv.Cantidad FROM DetalleVenta dv JOIN ProductoVariante v ON v.IdVariante=dv.IdVariante JOIN Producto p ON p.IdProducto=v.IdProducto JOIN Venta ve ON ve.IdVenta=dv.IdVenta WHERE ve.Estado='Completada' AND (@id=0 OR dv.IdVenta=@id) ORDER BY dv.IdDetalleVenta DESC",Db.P("@id",ventaId));ViewBag.Variantes=db.List("SELECT v.IdVariante,p.Nombre+' / '+v.Talla+' / '+v.Color AS Nombre FROM ProductoVariante v JOIN Producto p ON p.IdProducto=v.IdProducto WHERE v.Activo=1 AND p.Activo=1");return View();}
+ [HttpPost][ValidateAntiForgeryToken]public IActionResult Crear(ReturnForm form){try{int id=svc.Return(form,int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));TempData["ok"]="Devolución/cambio #"+id+" registrado.";return RedirectToAction("Index");}catch(Exception ex){TempData["err"]=ex.Message;return RedirectToAction("Crear",new{ventaId=form.VentaId});}}
+}
+    
