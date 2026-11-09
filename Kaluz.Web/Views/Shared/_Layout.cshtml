@@ -1,90 +1,207 @@
-
+@{
+    var loggedIn = User.Identity?.IsAuthenticated == true;
+    var currentPath = Context.Request.Path.Value ?? "/";
+    var currentTipo = Context.Request.Query["tipo"].ToString();
+}
 <!doctype html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#650b35" />
     <title>@ViewData["Title"] | Kaluz</title>
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="@(loggedIn ? "logged-in" : "guest-page")">
     <div class="app">
-        <aside class="sidebar">
-            <a href="/" class="brand">
-                ✦ Kaluz
-                <small>Gestión de tienda</small>
-            </a>
-
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <div class="user">
-                    @User.Identity.Name
-                    <br />
-                    <small>
-                        @(User.IsInRole("Administrador") ? "Administradora" : "Vendedora")
-                    </small>
+        @if (loggedIn)
+        {
+            <button type="button" class="sidebar-backdrop" aria-label="Cerrar menú lateral" tabindex="-1" hidden></button>
+            <aside class="sidebar" id="kaluzSidebar" aria-label="Menú principal">
+                <div class="sidebar-brand-row">
+                <a href="/" class="brand" aria-label="Kaluz, ir al inicio">
+                    <span class="brand-emblem">✦</span><span class="brand-name">Kaluz<small>MODA FEMENINA · GESTIÓN</small></span>
+                </a>
+                <button type="button" class="sidebar-chevron-toggle" aria-label="Contraer menú lateral" aria-controls="kaluzSidebar" aria-expanded="true" title="Contraer barra lateral"><span aria-hidden="true">❮</span></button>
                 </div>
+                <div class="user">
+                    <span class="user-avatar">@((User.Identity?.Name ?? "K").Substring(0, 1).ToUpperInvariant())</span>
+                    <span class="user-description"><strong>@User.Identity?.Name</strong><small>@(User.IsInRole("Administrador") ? "Administradora" : "Vendedora")</small></span>
+                </div>
+                <nav class="sidebar-nav" aria-label="Secciones del sistema">
+                    <div class="navtitle">GENERAL</div>
+                    <a href="/" class="@(currentPath == "/" ? "active" : "")"><span class="nav-icon">⌂</span><span class="nav-label">Dashboard</span></a>
 
-                <nav>
-                    <a href="/">⌂ Dashboard</a>
-                    <a href="/Ventas">▣ Ventas y tickets</a>
-                    <a href="/Ventas/Crear">＋ Nueva venta</a>
-                    <a href="/Inventario">◫ Inventario</a>
-                    <a href="/Maestros?tipo=Clientes">♧ Clientes</a>
-                    <a href="/Caja">▥ Caja</a>
-                    <a href="/Devoluciones">↶ Devoluciones</a>
+                    <details class="nav-group" data-nav-group="ventas" open="@(currentPath.StartsWith("/Ventas", StringComparison.OrdinalIgnoreCase) || currentPath.StartsWith("/Devoluciones", StringComparison.OrdinalIgnoreCase))">
+                        <summary class="nav-group-toggle"><span class="nav-icon">▣</span><span class="nav-group-name">Ventas</span><span class="nav-chevron" aria-hidden="true"></span></summary>
+                        <div class="nav-group-links">
+                            <a href="/Ventas" class="@(currentPath == "/Ventas" ? "active" : "")"><span class="nav-subicon">•</span> Ventas y tickets</a>
+                            <a href="/Ventas/Crear" class="@(currentPath == "/Ventas/Crear" ? "active" : "")"><span class="nav-subicon">•</span> Nueva venta</a>
+                            <a href="/Devoluciones" class="@(currentPath.StartsWith("/Devoluciones", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="nav-subicon">•</span> Devoluciones</a>
+                        </div>
+                    </details>
+
+                    <a href="/Inventario" class="@(currentPath.StartsWith("/Inventario", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="nav-icon">▤</span><span class="nav-label">Inventario</span></a>
+                    <details class="nav-group" data-nav-group="atencion" open="@(currentTipo == "Clientes" || currentPath.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase))">
+                        <summary class="nav-group-toggle"><span class="nav-icon">♧</span><span class="nav-group-name">Clientes y caja</span><span class="nav-chevron" aria-hidden="true"></span></summary>
+                        <div class="nav-group-links">
+                            <a href="/Maestros?tipo=Clientes" class="@(currentTipo == "Clientes" ? "active" : "")"><span class="nav-subicon">•</span> Clientes</a>
+                            <a href="/Caja" class="@(currentPath.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="nav-subicon">•</span> Caja</a>
+                        </div>
+                    </details>
 
                     @if (User.IsInRole("Administrador"))
                     {
                         <div class="navtitle">ADMINISTRACIÓN</div>
-
-                        <a href="/Maestros?tipo=Productos">▤ Productos</a>
-                        <a href="/Maestros?tipo=Variantes">◩ Tallas y colores</a>
-                        <a href="/Maestros?tipo=Categorias">Categorías</a>
-                        <a href="/Maestros?tipo=Proveedores">Proveedores</a>
-                        <a href="/Compras">Compras</a>
-                        <a href="/Maestros?tipo=Gastos">Gastos</a>
-                        <a href="/Maestros?tipo=CategoriasGasto">Categorías de gastos</a>
-                        <a href="/Maestros?tipo=Usuarios">Usuarios y roles</a>
-                        <a href="/Reportes">Reportes</a>
+                        <details class="nav-group" data-nav-group="catalogo" open="@(currentTipo == "Productos" || currentTipo == "Variantes" || currentTipo == "Categorias")">
+                            <summary class="nav-group-toggle"><span class="nav-icon">▧</span><span class="nav-group-name">Catálogo</span><span class="nav-chevron" aria-hidden="true"></span></summary>
+                            <div class="nav-group-links">
+                                <a href="/Maestros?tipo=Productos" class="@(currentTipo == "Productos" ? "active" : "")"><span class="nav-subicon">•</span> Productos</a>
+                                <a href="/Maestros?tipo=Variantes" class="@(currentTipo == "Variantes" ? "active" : "")"><span class="nav-subicon">•</span> Tallas y colores</a>
+                                <a href="/Maestros?tipo=Categorias" class="@(currentTipo == "Categorias" ? "active" : "")"><span class="nav-subicon">•</span> Categorías</a>
+                            </div>
+                        </details>
+                        <details class="nav-group" data-nav-group="abastecimiento" open="@(currentTipo == "Proveedores" || currentPath.StartsWith("/Compras", StringComparison.OrdinalIgnoreCase))">
+                            <summary class="nav-group-toggle"><span class="nav-icon">◈</span><span class="nav-group-name">Abastecimiento</span><span class="nav-chevron" aria-hidden="true"></span></summary>
+                            <div class="nav-group-links">
+                                <a href="/Maestros?tipo=Proveedores" class="@(currentTipo == "Proveedores" ? "active" : "")"><span class="nav-subicon">•</span> Proveedores</a>
+                                <a href="/Compras" class="@(currentPath.StartsWith("/Compras", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="nav-subicon">•</span> Compras</a>
+                            </div>
+                        </details>
+                        <details class="nav-group" data-nav-group="administracion" open="@(currentTipo == "Gastos" || currentTipo == "CategoriasGasto" || currentTipo == "Usuarios" || currentPath.StartsWith("/Reportes", StringComparison.OrdinalIgnoreCase))">
+                            <summary class="nav-group-toggle"><span class="nav-icon">▥</span><span class="nav-group-name">Gestión y reportes</span><span class="nav-chevron" aria-hidden="true"></span></summary>
+                            <div class="nav-group-links">
+                                <a href="/Maestros?tipo=Gastos" class="@(currentTipo == "Gastos" ? "active" : "")"><span class="nav-subicon">•</span> Gastos</a>
+                                <a href="/Maestros?tipo=CategoriasGasto" class="@(currentTipo == "CategoriasGasto" ? "active" : "")"><span class="nav-subicon">•</span> Categorías de gastos</a>
+                                <a href="/Maestros?tipo=Usuarios" class="@(currentTipo == "Usuarios" ? "active" : "")"><span class="nav-subicon">•</span> Usuarios y roles</a>
+                                <a href="/Reportes" class="@(currentPath.StartsWith("/Reportes", StringComparison.OrdinalIgnoreCase) ? "active" : "")"><span class="nav-subicon">•</span> Reportes</a>
+                            </div>
+                        </details>
                     }
                 </nav>
-
                 <div class="bottom">
-                    <a href="/Account/Password">Cambiar contraseña</a>
-
-                    <form asp-controller="Account"
-                          asp-action="Logout"
-                          method="post">
+                    <a href="/Account/Password"><span class="nav-icon">⚙</span><span class="nav-label">Cambiar contraseña</span></a>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
                         @Html.AntiForgeryToken()
-                        <button class="linkbtn" type="submit">
-                            Cerrar sesión
-                        </button>
+                        <button class="linkbtn" type="submit"><span class="nav-icon">↪</span><span class="nav-label">Cerrar sesión</span></button>
                     </form>
                 </div>
-            }
-        </aside>
-
+            </aside>
+        }
         <main class="main">
-            <header class="top">
-                <span>Panel de gestión · Tienda de ropa femenina</span>
-                <strong>@DateTime.Now.ToString("dd/MM/yyyy")</strong>
-            </header>
-
+            @if (loggedIn)
+            {
+                <header class="top">
+                    <div class="top-left"><button type="button" class="sidebar-top-toggle" aria-label="Contraer menú lateral" aria-controls="kaluzSidebar" aria-expanded="true" title="Mostrar u ocultar barra lateral"><span class="sidebar-top-toggle-glyph" aria-hidden="true">❮</span></button><span class="top-mark">✦</span><span>Kaluz <span class="top-subtitle">/ Panel de gestión</span></span></div>
+                    <div class="top-right"><span class="top-date">@DateTime.Now.ToString("dd/MM/yyyy")</span><span class="top-user">@User.Identity?.Name</span></div>
+                </header>
+            }
             <section class="content">
-                @if (TempData["ok"] != null)
-                {
-                    <div class="alert ok">@TempData["ok"]</div>
-                }
-
-                @if (TempData["err"] != null)
-                {
-                    <div class="alert bad">@TempData["err"]</div>
-                }
-
+                @if (TempData["ok"] != null) { <div class="alert ok">@TempData["ok"]</div> }
+                @if (TempData["err"] != null) { <div class="alert bad">@TempData["err"]</div> }
                 @RenderBody()
             </section>
         </main>
     </div>
+    @if (loggedIn)
+    {
+        <script>
+            (function () {
+                const groups = document.querySelectorAll('.sidebar-nav .nav-group');
+                groups.forEach(function (group) {
+                    const key = 'kaluz.nav.' + group.dataset.navGroup;
+                    const hasActiveLink = !!group.querySelector('a.active');
+                    if (hasActiveLink) {
+                        group.open = true;
+                    } else {
+                        try { group.open = sessionStorage.getItem(key) === 'open'; } catch (_) { /* Storage opcional */ }
+                    }
+                    group.addEventListener('toggle', function () {
+                        try { sessionStorage.setItem(key, group.open ? 'open' : 'closed'); } catch (_) { /* Sin almacenamiento */ }
+                    });
+                });
+            })();
+        </script>
+        <script>
+            // Únicamente presentación del menú: no modifica rutas, datos, roles ni formularios.
+            (function () {
+                const body = document.body;
+                const sidebar = document.getElementById('kaluzSidebar');
+                const topToggle = document.querySelector('.sidebar-top-toggle');
+                const sideToggle = document.querySelector('.sidebar-chevron-toggle');
+                const backdrop = document.querySelector('.sidebar-backdrop');
+                const groups = sidebar.querySelectorAll('.nav-group');
+                const narrow = window.matchMedia('(max-width: 800px)');
+                const storageKey = 'kaluz.sidebar.collapsed';
+                let collapsed = false;
+                try { collapsed = localStorage.getItem(storageKey) === 'yes'; } catch (_) { }
+
+                function render() {
+                    const mobile = narrow.matches;
+                    if (mobile) {
+                        body.classList.remove('sidebar-is-collapsed');
+                        const visible = body.classList.contains('sidebar-is-open');
+                        if (backdrop) backdrop.hidden = !visible;
+                        if (topToggle) {
+                            topToggle.setAttribute('aria-expanded', String(visible));
+                            topToggle.setAttribute('aria-label', visible ? 'Cerrar barra lateral' : 'Abrir barra lateral');
+                            topToggle.querySelector('.sidebar-top-toggle-glyph').textContent = visible ? '×' : '☰';
+                        }
+                    } else {
+                        body.classList.remove('sidebar-is-open');
+                        body.classList.toggle('sidebar-is-collapsed', collapsed);
+                        if (backdrop) backdrop.hidden = true;
+                        if (topToggle) {
+                            topToggle.setAttribute('aria-expanded', String(!collapsed));
+                            topToggle.setAttribute('aria-label', collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral');
+                            topToggle.querySelector('.sidebar-top-toggle-glyph').textContent = collapsed ? '❯' : '❮';
+                        }
+                        if (sideToggle) {
+                            sideToggle.setAttribute('aria-expanded', String(!collapsed));
+                            sideToggle.setAttribute('aria-label', collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral');
+                            sideToggle.querySelector('span').textContent = collapsed ? '❯' : '❮';
+                        }
+                    }
+                    if (sideToggle) sideToggle.hidden = mobile;
+                }
+                function toggleSidebar() {
+                    if (narrow.matches) {
+                        body.classList.toggle('sidebar-is-open');
+                    } else {
+                        collapsed = !collapsed;
+                        try { localStorage.setItem(storageKey, collapsed ? 'yes' : 'no'); } catch (_) { }
+                    }
+                    render();
+                }
+                topToggle.addEventListener('click', toggleSidebar);
+                sideToggle.addEventListener('click', toggleSidebar);
+                backdrop.addEventListener('click', function () {
+                    body.classList.remove('sidebar-is-open');
+                    render();
+                });
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && narrow.matches && body.classList.contains('sidebar-is-open')) {
+                        body.classList.remove('sidebar-is-open');
+                        render();
+                        topToggle.focus();
+                    }
+                });
+                // Al pulsar un grupo con la barra contraída, se expande para mostrar sus opciones.
+                groups.forEach(function (group) {
+                    const summary = group.querySelector('summary');
+                    summary.addEventListener('click', function () {
+                        if (!narrow.matches && collapsed) {
+                            collapsed = false;
+                            try { localStorage.setItem(storageKey, 'no'); } catch (_) { }
+                            render();
+                        }
+                    });
+                });
+                if (narrow.addEventListener) narrow.addEventListener('change', render);
+                else narrow.addListener(render);
+                render();
+            })();
+        </script>
+    }
 </body>
 </html>
